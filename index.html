@@ -150,8 +150,8 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            border: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s;
             z-index: 100;
             color: var(--accent);
         }
@@ -159,6 +159,16 @@
         .music-toggle:hover {
             transform: scale(1.08);
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+        }
+
+        .music-toggle.loading {
+            border-color: #ffa500;
+            animation: pulse-border 1s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: #ffa500; }
+            50% { border-color: transparent; }
         }
 
         .music-toggle svg {
@@ -176,6 +186,29 @@
 
         .music-toggle.playing .icon-pause {
             display: block;
+        }
+
+        /* 音乐提示 */
+        .music-hint {
+            position: fixed;
+            bottom: 5.5rem;
+            right: 2rem;
+            background: var(--card-bg);
+            color: var(--subtle);
+            padding: 0.4rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .music-hint.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* 暗色模式适配 */
@@ -222,6 +255,10 @@
                 width: 44px;
                 height: 44px;
             }
+            .music-hint {
+                bottom: 5rem;
+                right: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -252,6 +289,9 @@
         <p class="target-info" id="targetDisplay">目标：<strong>2026年06月28日 00:00:00</strong></p>
     </div>
 
+    <!-- 音乐提示 -->
+    <div class="music-hint" id="musicHint">点击播放音乐 ♪</div>
+
     <!-- 音乐切换按钮 -->
     <button class="music-toggle" id="musicToggle" aria-label="播放/暂停背景音乐">
         <svg class="icon-play" viewBox="0 0 24 24" width="22" height="22">
@@ -265,7 +305,7 @@
 
     <!-- 音频元素 -->
     <audio id="bgMusic" loop preload="auto">
-        <source src="https://cdn.jsdelivr.net/gh/endlessseven7-ui/music@main/whitenoise-Guqin.mp3" type="audio/mpeg">
+        <source src="https://cdn.jsdelivr.net/gh/endlessseven7-ui/music@main/whitenoise.mp3" type="audio/mpeg">
         您的浏览器不支持音频播放。
     </audio>
 
@@ -278,6 +318,7 @@
             const targetDisplay = document.getElementById('targetDisplay');
             const musicToggle = document.getElementById('musicToggle');
             const bgMusic = document.getElementById('bgMusic');
+            const musicHint = document.getElementById('musicHint');
 
             // 显示目标日期
             const formatDateStr = (date) => {
@@ -347,16 +388,62 @@
             setInterval(updateCountdown, 1000);
 
             // ========== 音乐控制逻辑 ==========
+            let musicLoaded = false;
+            let userInteracted = false;
+            let hintTimer = null;
+
+            // 显示提示
+            const showHint = (text, duration = 3000) => {
+                musicHint.textContent = text;
+                musicHint.classList.add('show');
+                if (hintTimer) clearTimeout(hintTimer);
+                hintTimer = setTimeout(() => {
+                    musicHint.classList.remove('show');
+                }, duration);
+            };
+
+            // 首次显示提示
+            setTimeout(() => showHint('点击播放音乐 ♪'), 1000);
+
+            // 音乐加载状态
+            bgMusic.addEventListener('loadstart', () => {
+                musicToggle.classList.add('loading');
+                showHint('音乐加载中...', 2000);
+            });
+
+            bgMusic.addEventListener('canplay', () => {
+                musicToggle.classList.remove('loading');
+                musicLoaded = true;
+                showHint('音乐就绪 ♪', 1500);
+            });
+
+            bgMusic.addEventListener('error', () => {
+                musicToggle.classList.remove('loading');
+                musicToggle.style.opacity = '0.5';
+                showHint('音乐加载失败，请检查链接', 5000);
+            });
+
             musicToggle.addEventListener('click', () => {
+                userInteracted = true;
+
+                if (!musicLoaded) {
+                    showHint('音乐正在加载...', 2000);
+                    bgMusic.load();
+                    return;
+                }
+
                 if (bgMusic.paused) {
                     bgMusic.play().then(() => {
                         musicToggle.classList.add('playing');
+                        showHint('正在播放 ♪', 1500);
                     }).catch(err => {
-                        console.warn('音乐播放失败:', err);
+                        console.warn('播放失败:', err);
+                        showHint('播放失败，请再点一次', 3000);
                     });
                 } else {
                     bgMusic.pause();
                     musicToggle.classList.remove('playing');
+                    showHint('已暂停', 1500);
                 }
             });
 
