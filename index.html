@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>倒计时</title>
+    <title>翻页时钟倒计时</title>
     <style>
         :root {
-            --bg: #f5f5f0;
-            --text: #1a1a1a;
+            --bg: #1a1a1e;
+            --card-bg: #2c2c30;
+            --text: #f0f0f0;
             --subtle: #999;
-            --accent: #333;
-            --card-bg: #ffffff;
-            --shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+            --accent: #ffffff;
+            --flip-top: #3a3a40;
+            --flip-bottom: #2c2c30;
+            --flip-shadow: rgba(0, 0, 0, 0.5);
+            --button-bg: #3a3a40;
+            --button-hover: #4a4a50;
+            --input-bg: #3a3a40;
+            --input-border: #555;
         }
 
         * {
@@ -31,6 +37,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             position: relative;
+            user-select: none;
         }
 
         .container {
@@ -40,76 +47,127 @@
 
         .label-top {
             font-size: 0.85rem;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.15em;
             text-transform: uppercase;
             color: var(--subtle);
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             font-weight: 500;
-            user-select: none;
         }
 
+        /* ========== 翻页时钟样式 ========== */
         .countdown {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: clamp(0.8rem, 2.5vw, 2rem);
+            flex-wrap: wrap;
+            perspective: 1000px;
+        }
+
+        .flip-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .flip-card {
+            position: relative;
+            width: clamp(80px, 18vw, 140px);
+            height: clamp(100px, 22vw, 180px);
+            perspective: 600px;
+        }
+
+        .flip-digit {
+            position: absolute;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: clamp(0.5rem, 2vw, 1.5rem);
-            flex-wrap: wrap;
-        }
-
-        .time-block {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: clamp(1.2rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.8rem);
-            min-width: clamp(70px, 16vw, 120px);
-            box-shadow: var(--shadow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            user-select: none;
-        }
-
-        .time-block:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
-        }
-
-        .number {
-            font-size: clamp(2.8rem, 7vw, 5.5rem);
-            font-weight: 300;
-            line-height: 1;
-            letter-spacing: -0.02em;
-            color: var(--accent);
-            font-variant-numeric: tabular-nums;
+            font-size: clamp(3.5rem, 8vw, 7rem);
+            font-weight: 700;
             font-family: "SF Mono", "JetBrains Mono", "Menlo", "Consolas", "PingFang SC", monospace;
+            color: var(--accent);
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--flip-shadow), inset 0 1px 0 rgba(255,255,255,0.05);
+            overflow: hidden;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+            transform-origin: center center;
+            backface-visibility: hidden;
         }
 
-        .number span {
-            display: inline-block;
-            min-width: 0.55em;
-            text-align: center;
-            transition: transform 0.15s ease;
+        .flip-digit::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: rgba(0,0,0,0.4);
+            z-index: 2;
+            pointer-events: none;
         }
 
-        .number span.flip {
-            transform: translateY(-4px);
-            opacity: 0.7;
+        .flip-digit::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 5%;
+            width: 90%;
+            height: 50%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.06), transparent);
+            border-radius: 12px 12px 0 0;
+            pointer-events: none;
         }
 
-        .unit {
+        .flip-digit.old {
+            z-index: 1;
+            animation: flipOut 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .flip-digit.new {
+            z-index: 0;
+            animation: flipIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes flipOut {
+            0% {
+                transform: rotateX(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: rotateX(-180deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes flipIn {
+            0% {
+                transform: rotateX(180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: rotateX(0deg);
+                opacity: 1;
+            }
+        }
+
+        .flip-label {
             font-size: 0.75rem;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             text-transform: uppercase;
             color: var(--subtle);
-            margin-top: 0.5rem;
             font-weight: 500;
-            user-select: none;
         }
 
-        .separator {
-            font-size: clamp(2rem, 5vw, 3.5rem);
+        .flip-separator {
+            font-size: clamp(3rem, 7vw, 6rem);
             font-weight: 200;
-            color: #ccc;
-            align-self: flex-start;
-            margin-top: clamp(0.6rem, 2vw, 1.2rem);
-            user-select: none;
+            color: #555;
+            line-height: 1;
+            margin-top: -0.2em;
             animation: blink-sep 2s ease-in-out infinite;
         }
 
@@ -119,24 +177,167 @@
                 opacity: 1;
             }
             50% {
-                opacity: 0.25;
+                opacity: 0.2;
             }
         }
 
-        .target-info {
+        /* ========== 设置面板 ========== */
+        .settings-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--button-bg);
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+            z-index: 200;
+        }
+
+        .settings-toggle:hover {
+            background: var(--button-hover);
+            transform: rotate(30deg);
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            z-index: 300;
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+            width: min(90vw, 400px);
+        }
+
+        .settings-panel.open {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.6);
+            z-index: 250;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .settings-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .settings-panel h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+
+        .settings-panel label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--subtle);
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.05em;
+        }
+
+        .settings-panel input[type="datetime-local"] {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            margin-bottom: 1.5rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .settings-panel input[type="datetime-local"]:focus {
+            border-color: #888;
+        }
+
+        .settings-buttons {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: flex-end;
+        }
+
+        .settings-buttons button {
+            padding: 0.7rem 1.4rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: inherit;
+            letter-spacing: 0.04em;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .settings-buttons button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: var(--subtle);
+            border: 1px solid #555 !important;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-save {
+            background: #ffffff;
+            color: #1a1a1e;
+            font-weight: 600;
+        }
+
+        .btn-save:hover {
+            background: #e0e0e0;
+        }
+
+        .target-display {
             margin-top: 2.5rem;
             font-size: 0.85rem;
             color: var(--subtle);
             letter-spacing: 0.04em;
-            user-select: none;
+            cursor: pointer;
+            transition: color 0.2s;
         }
 
-        .target-info strong {
+        .target-display:hover {
+            color: #ccc;
+        }
+
+        .target-display strong {
             color: var(--text);
             font-weight: 500;
         }
 
-        /* 音乐按钮样式 */
+        /* ========== 音乐按钮 ========== */
         .music-toggle {
             position: fixed;
             bottom: 2rem;
@@ -144,31 +345,20 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background: var(--card-bg);
-            box-shadow: var(--shadow);
+            background: var(--button-bg);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s;
+            border: none;
+            transition: transform 0.2s, background 0.2s;
             z-index: 100;
-            color: var(--accent);
+            color: var(--text);
         }
 
         .music-toggle:hover {
+            background: var(--button-hover);
             transform: scale(1.08);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
-        }
-
-        .music-toggle.loading {
-            border-color: #ffa500;
-            animation: pulse-border 1s infinite;
-        }
-
-        @keyframes pulse-border {
-            0%, 100% { border-color: #ffa500; }
-            50% { border-color: transparent; }
         }
 
         .music-toggle svg {
@@ -188,7 +378,6 @@
             display: block;
         }
 
-        /* 音乐提示 */
         .music-hint {
             position: fixed;
             bottom: 5.5rem;
@@ -198,12 +387,13 @@
             padding: 0.4rem 0.8rem;
             border-radius: 1rem;
             font-size: 0.7rem;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
             opacity: 0;
             transform: translateY(8px);
             transition: opacity 0.3s, transform 0.3s;
             pointer-events: none;
             white-space: nowrap;
+            z-index: 101;
         }
 
         .music-hint.show {
@@ -211,43 +401,20 @@
             transform: translateY(0);
         }
 
-        /* 暗色模式适配 */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #1a1a1c;
-                --text: #e8e8e6;
-                --subtle: #7a7a78;
-                --accent: #f0f0f0;
-                --card-bg: #242426;
-                --shadow: 0 2px 16px rgba(0, 0, 0, 0.30);
-            }
-            .separator {
-                color: #444;
-            }
-            .time-block:hover {
-                box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45);
-            }
-            .music-toggle {
-                box-shadow: 0 2px 16px rgba(0, 0, 0, 0.30);
-            }
-        }
-
         @media (max-width: 480px) {
             .countdown {
                 gap: 0.4rem;
             }
-            .time-block {
-                border-radius: 14px;
-                padding: 1rem 0.7rem;
-                min-width: 58px;
+            .flip-card {
+                width: 60px;
+                height: 80px;
             }
-            .unit {
-                font-size: 0.65rem;
-                letter-spacing: 0.06em;
+            .flip-digit {
+                font-size: 2.5rem;
+                border-radius: 8px;
             }
-            .separator {
-                margin-top: 0.4rem;
-                font-size: 1.6rem;
+            .flip-separator {
+                font-size: 2rem;
             }
             .music-toggle {
                 bottom: 1.5rem;
@@ -259,40 +426,47 @@
                 bottom: 5rem;
                 right: 1.5rem;
             }
+            .settings-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <p class="label-top">距离目标日期还有</p>
-        <div class="countdown">
-            <div class="time-block">
-                <div class="number" id="days">00</div>
-                <div class="unit">天</div>
-            </div>
-            <span class="separator">:</span>
-            <div class="time-block">
-                <div class="number" id="hours">00</div>
-                <div class="unit">时</div>
-            </div>
-            <span class="separator">:</span>
-            <div class="time-block">
-                <div class="number" id="minutes">00</div>
-                <div class="unit">分</div>
-            </div>
-            <span class="separator">:</span>
-            <div class="time-block">
-                <div class="number" id="seconds">00</div>
-                <div class="unit">秒</div>
-            </div>
+
+    <!-- 设置按钮 -->
+    <button class="settings-toggle" id="settingsToggle" aria-label="设置倒计时" title="设置目标时间">⚙️</button>
+
+    <!-- 设置面板遮罩 -->
+    <div class="settings-overlay" id="settingsOverlay"></div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settingsPanel">
+        <h3>设置倒计时目标时间</h3>
+        <label for="targetInput">选择日期和时间：</label>
+        <input type="datetime-local" id="targetInput">
+        <div class="settings-buttons">
+            <button class="btn-cancel" id="btnCancel">取消</button>
+            <button class="btn-save" id="btnSave">保存</button>
         </div>
-        <p class="target-info" id="targetDisplay">目标：<strong>2026年06月28日 00:00:00</strong></p>
     </div>
 
-    <!-- 音乐提示 -->
-    <div class="music-hint" id="musicHint">点击播放音乐 ♪</div>
+    <!-- 主内容 -->
+    <div class="container">
+        <p class="label-top" id="labelTop">距离目标还有</p>
+        <div class="countdown" id="countdownContainer">
+            <!-- 由 JS 动态生成 -->
+        </div>
+        <p class="target-display" id="targetDisplay" title="点击右上角齿轮修改目标时间">
+            目标：<strong id="targetText">--</strong>
+        </p>
+    </div>
 
-    <!-- 音乐切换按钮 -->
+    <!-- 音乐按钮 -->
     <button class="music-toggle" id="musicToggle" aria-label="播放/暂停背景音乐">
         <svg class="icon-play" viewBox="0 0 24 24" width="22" height="22">
             <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
@@ -302,26 +476,49 @@
             <rect x="14" y="4" width="4" height="16" fill="currentColor" stroke="none"/>
         </svg>
     </button>
+    <div class="music-hint" id="musicHint">点击播放音乐 ♪</div>
 
-    <!-- 音频元素 -->
     <audio id="bgMusic" loop preload="auto">
         <source src="https://whitenoise-1309702382.cos.ap-guangzhou.myqcloud.com/whitenoise.mp3" type="audio/mpeg">
-        您的浏览器不支持音频播放。
     </audio>
 
     <script>
         (function() {
-            // ========== 目标日期：2026年6月28日 00:00:00 ==========
-            const targetDate = new Date('2026-06-28T00:00:00');
+            // ========== 目标时间管理（localStorage 持久化） ==========
+            const STORAGE_KEY = 'countdown_target_date';
+            const DEFAULT_TARGET = '2026-06-28T00:00:00';
+
+            function getTargetDate() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const d = new Date(saved);
+                    if (!isNaN(d.getTime())) return d;
+                }
+                return new Date(DEFAULT_TARGET);
+            }
+
+            function saveTargetDate(date) {
+                localStorage.setItem(STORAGE_KEY, date.toISOString());
+            }
+
+            let targetDate = getTargetDate();
 
             // ========== DOM 元素 ==========
-            const targetDisplay = document.getElementById('targetDisplay');
+            const countdownContainer = document.getElementById('countdownContainer');
+            const labelTop = document.getElementById('labelTop');
+            const targetText = document.getElementById('targetText');
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            const targetInput = document.getElementById('targetInput');
+            const btnCancel = document.getElementById('btnCancel');
+            const btnSave = document.getElementById('btnSave');
             const musicToggle = document.getElementById('musicToggle');
             const bgMusic = document.getElementById('bgMusic');
             const musicHint = document.getElementById('musicHint');
 
-            // 显示目标日期
-            const formatDateStr = (date) => {
+            // ========== 格式化日期 ==========
+            function formatDateStr(date) {
                 const y = date.getFullYear();
                 const m = String(date.getMonth() + 1).padStart(2, '0');
                 const d = String(date.getDate()).padStart(2, '0');
@@ -329,115 +526,174 @@
                 const min = String(date.getMinutes()).padStart(2, '0');
                 const s = String(date.getSeconds()).padStart(2, '0');
                 return `${y}年${m}月${d}日 ${h}:${min}:${s}`;
-            };
-            targetDisplay.innerHTML = `目标：<strong>${formatDateStr(targetDate)}</strong>`;
+            }
 
-            // 存储上一次的数值
-            let prevValues = { days: '', hours: '', minutes: '', seconds: '' };
+            function toDatetimeLocalString(date) {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                const h = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                return `${y}-${m}-${d}T${h}:${min}`;
+            }
 
-            const pad = (n) => String(n).padStart(2, '0');
+            // ========== 构建翻页时钟 DOM ==========
+            const units = [
+                { id: 'days', label: '天' },
+                { id: 'hours', label: '时' },
+                { id: 'minutes', label: '分' },
+                { id: 'seconds', label: '秒' },
+            ];
 
-            const updateDisplay = (id, valueStr) => {
-                const el = document.getElementById(id);
-                if (prevValues[id] !== valueStr && prevValues[id] !== '') {
-                    el.innerHTML = valueStr
-                        .split('')
-                        .map(ch => `<span class="flip">${ch}</span>`)
-                        .join('');
-                    setTimeout(() => {
-                        el.innerHTML = valueStr
-                            .split('')
-                            .map(ch => `<span>${ch}</span>`)
-                            .join('');
-                    }, 150);
-                } else if (prevValues[id] === '') {
-                    el.innerHTML = valueStr
-                        .split('')
-                        .map(ch => `<span>${ch}</span>`)
-                        .join('');
-                }
-                prevValues[id] = valueStr;
-            };
+            function buildCountdownHTML() {
+                let html = '';
+                units.forEach((unit, index) => {
+                    if (index > 0) {
+                        html += '<span class="flip-separator">:</span>';
+                    }
+                    html += `
+                        <div class="flip-unit">
+                            <div class="flip-card" id="flip-card-${unit.id}">
+                                <div class="flip-digit old" id="old-${unit.id}">00</div>
+                                <div class="flip-digit new" id="new-${unit.id}">00</div>
+                            </div>
+                            <span class="flip-label">${unit.label}</span>
+                        </div>
+                    `;
+                });
+                countdownContainer.innerHTML = html;
+            }
 
-            const updateCountdown = () => {
+            buildCountdownHTML();
+
+            // 缓存 DOM 引用
+            const flipElements = {};
+            units.forEach(u => {
+                flipElements[u.id] = {
+                    old: document.getElementById(`old-${u.id}`),
+                    new: document.getElementById(`new-${u.id}`),
+                };
+            });
+
+            // ========== 翻页动画 ==========
+            let prevValues = { days: '00', hours: '00', minutes: '00', seconds: '00' };
+            let animating = { days: false, hours: false, minutes: false, seconds: false };
+
+            function pad(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function flipUnit(id, newValue) {
+                if (animating[id]) return;
+                if (prevValues[id] === newValue) return;
+
+                animating[id] = true;
+                const els = flipElements[id];
+
+                // 更新旧层为当前值，新层为新值
+                els.old.textContent = prevValues[id];
+                els.new.textContent = newValue;
+
+                // 重置动画
+                els.old.classList.remove('old');
+                els.new.classList.remove('new');
+                void els.old.offsetWidth; // reflow
+
+                els.old.classList.add('old');
+                els.new.classList.add('new');
+
+                prevValues[id] = newValue;
+
+                setTimeout(() => {
+                    animating[id] = false;
+                }, 600);
+            }
+
+            // ========== 更新显示 ==========
+            function updateTargetDisplay() {
+                targetText.textContent = formatDateStr(targetDate);
+            }
+
+            function updateCountdown() {
                 const now = new Date();
                 const diff = targetDate - now;
 
                 if (diff <= 0) {
-                    updateDisplay('days', '00');
-                    updateDisplay('hours', '00');
-                    updateDisplay('minutes', '00');
-                    updateDisplay('seconds', '00');
-                    document.querySelector('.label-top').textContent = '倒计时已结束';
+                    // 倒计时结束
+                    ['days', 'hours', 'minutes', 'seconds'].forEach(id => flipUnit(id, '00'));
+                    labelTop.textContent = '倒计时已结束';
                     return;
                 }
 
+                labelTop.textContent = '距离目标还有';
                 const totalSeconds = Math.floor(diff / 1000);
                 const days = Math.floor(totalSeconds / 86400);
                 const hours = Math.floor((totalSeconds % 86400) / 3600);
                 const minutes = Math.floor((totalSeconds % 3600) / 60);
                 const seconds = totalSeconds % 60;
 
-                updateDisplay('days', pad(days));
-                updateDisplay('hours', pad(hours));
-                updateDisplay('minutes', pad(minutes));
-                updateDisplay('seconds', pad(seconds));
-            };
+                flipUnit('days', pad(days));
+                flipUnit('hours', pad(hours));
+                flipUnit('minutes', pad(minutes));
+                flipUnit('seconds', pad(seconds));
+            }
 
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
+            // ========== 设置面板逻辑 ==========
+            function openSettings() {
+                targetInput.value = toDatetimeLocalString(targetDate);
+                settingsPanel.classList.add('open');
+                settingsOverlay.classList.add('open');
+            }
 
-            // ========== 音乐控制逻辑 ==========
-            let musicLoaded = false;
-            let userInteracted = false;
+            function closeSettings() {
+                settingsPanel.classList.remove('open');
+                settingsOverlay.classList.remove('open');
+            }
+
+            function saveSettings() {
+                const val = targetInput.value;
+                if (!val) return;
+                const newDate = new Date(val);
+                if (isNaN(newDate.getTime())) return;
+
+                targetDate = newDate;
+                saveTargetDate(targetDate);
+                updateTargetDisplay();
+                // 强制立即刷新一次
+                prevValues = { days: '--', hours: '--', minutes: '--', seconds: '--' };
+                updateCountdown();
+                closeSettings();
+            }
+
+            settingsToggle.addEventListener('click', openSettings);
+            settingsOverlay.addEventListener('click', closeSettings);
+            btnCancel.addEventListener('click', closeSettings);
+            btnSave.addEventListener('click', saveSettings);
+
+            // 键盘 ESC 关闭
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeSettings();
+            });
+
+            // ========== 音乐控制 ==========
             let hintTimer = null;
-
-            // 显示提示
-            const showHint = (text, duration = 3000) => {
+            function showHint(text, duration = 3000) {
                 musicHint.textContent = text;
                 musicHint.classList.add('show');
                 if (hintTimer) clearTimeout(hintTimer);
                 hintTimer = setTimeout(() => {
                     musicHint.classList.remove('show');
                 }, duration);
-            };
+            }
 
-            // 首次显示提示
-            setTimeout(() => showHint('点击播放音乐 ♪'), 1000);
-
-            // 音乐加载状态
-            bgMusic.addEventListener('loadstart', () => {
-                musicToggle.classList.add('loading');
-                showHint('音乐加载中...', 2000);
-            });
-
-            bgMusic.addEventListener('canplay', () => {
-                musicToggle.classList.remove('loading');
-                musicLoaded = true;
-                showHint('音乐就绪 ♪', 1500);
-            });
-
-            bgMusic.addEventListener('error', () => {
-                musicToggle.classList.remove('loading');
-                musicToggle.style.opacity = '0.5';
-                showHint('音乐加载失败，请检查链接', 5000);
-            });
+            setTimeout(() => showHint('点击播放音乐 ♪'), 1500);
 
             musicToggle.addEventListener('click', () => {
-                userInteracted = true;
-
-                if (!musicLoaded) {
-                    showHint('音乐正在加载...', 2000);
-                    bgMusic.load();
-                    return;
-                }
-
                 if (bgMusic.paused) {
                     bgMusic.play().then(() => {
                         musicToggle.classList.add('playing');
                         showHint('正在播放 ♪', 1500);
-                    }).catch(err => {
-                        console.warn('播放失败:', err);
+                    }).catch(() => {
                         showHint('播放失败，请再点一次', 3000);
                     });
                 } else {
@@ -447,12 +703,14 @@
                 }
             });
 
-            bgMusic.addEventListener('play', () => {
-                musicToggle.classList.add('playing');
-            });
-            bgMusic.addEventListener('pause', () => {
-                musicToggle.classList.remove('playing');
-            });
+            bgMusic.addEventListener('play', () => musicToggle.classList.add('playing'));
+            bgMusic.addEventListener('pause', () => musicToggle.classList.remove('playing'));
+
+            // ========== 初始化 ==========
+            updateTargetDisplay();
+            prevValues = { days: '--', hours: '--', minutes: '--', seconds: '--' };
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
         })();
     </script>
 </body>
